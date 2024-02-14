@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Task
   ( -- * List Monoids
     constructFirstMonoid,
@@ -27,7 +28,12 @@ module Task
     saveTheDiabetic,
     calculateSugarDanger,
   )
-where
+where   
+
+import Data.Map (Map, empty, toList, insert, update, delete)
+import Data.Monoid (Sum(..))
+import qualified Data.Map
+import Data.List (sortBy)
 
 --   _     _     _     __  __                   _     _
 --  | |   (_)___| |_  |  \/  | ___  _ __   ___ (_) __| |___
@@ -50,19 +56,24 @@ where
 --
 -- >>> (destructFirstMonoid . fold . fmap constructFirstMonoid) []
 -- Nothing
-data FirstMonoid a
 
-instance Semigroup (FirstMonoid a)
+data FirstMonoid a = FM (Maybe a)
 
-instance Monoid (FirstMonoid a)
+instance Semigroup (FirstMonoid a) where
+  (FM Nothing) <> x = x
+  x <> _ = x
+
+
+instance Monoid (FirstMonoid a) where
+  mempty = FM Nothing
 
 -- Warps an `a` in a `FirstMonoid`.
 constructFirstMonoid :: a -> FirstMonoid a
-constructFirstMonoid = error "TODO: constructFirstMonoid"
+constructFirstMonoid = FM . Just
 
 -- Unwraps the `a` from a `FirstMonoid`, if there is one.
 destructFirstMonoid :: FirstMonoid a -> Maybe a
-destructFirstMonoid = error "TODO: destructFirstMonoid"
+destructFirstMonoid (FM x) = x
 
 -- Write a datatype and a Monoid instance for it such that:
 --
@@ -79,19 +90,22 @@ destructFirstMonoid = error "TODO: destructFirstMonoid"
 --
 -- >>> (destructLastMonoid . fold . fmap constructLastMonoid) []
 -- Nothing
-data LastMonoid a
+data LastMonoid a = LM (Maybe a)
 
-instance Semigroup (LastMonoid a)
+instance Semigroup (LastMonoid a) where
+  x <> (LM Nothing) = x
+  _ <> x = x
 
-instance Monoid (LastMonoid a)
+instance Monoid (LastMonoid a) where
+  mempty = LM Nothing
 
 -- Warps an `a` in a `LastMonoid`.
 constructLastMonoid :: a -> LastMonoid a
-constructLastMonoid = error "TODO: constructLastMonoid"
+constructLastMonoid = LM . Just
 
 -- Unwraps the `a` from a `LastMonoid`, if there is one.
 destructLastMonoid :: LastMonoid a -> Maybe a
-destructLastMonoid = error "TODO: destructLastMonoid"
+destructLastMonoid (LM x) = x
 
 --   _____         _         _     _     _
 --  |_   _|__   __| | ___   | |   (_)___| |_
@@ -105,7 +119,7 @@ destructLastMonoid = error "TODO: destructLastMonoid"
 
 -- | The priority of a task.
 data Priority = Low | Medium | High
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- | The completion status of a task.
 data Completion = Completed | NotCompleted
@@ -156,12 +170,35 @@ class TaskManager t where
   renameTask :: String -> String -> t -> t
 
 -- The task manager you are creating.
-data MyTaskManager
+data MyTaskManager = MTM (Map String (Completion, Priority))
 
 -- TODO: You have to make your 'MyTaskManager' an instance of
 -- the 'TaskManager' typeclass.
-instance TaskManager MyTaskManager
+instance TaskManager MyTaskManager where
+  emptyTaskManager = MTM empty
 
+  getPriorityList (MTM mp) = sortBy(\(_, lhs, _) (_, rhs, _) -> compare rhs lhs) $ (\(name, (comp, pri)) -> (comp, pri, name)) <$> toList mp
+
+  createTask :: String -> Priority -> MyTaskManager -> MyTaskManager
+  createTask name pri (MTM mp) = MTM $ insert name (NotCompleted, pri) mp
+
+  toggleTaskCompletion name (MTM mp) = let
+      toggleTask (Completed, pri) = (NotCompleted, pri)
+      toggleTask (NotCompleted, pri) = (Completed, pri)
+    in
+      MTM $ update (Just . toggleTask) name mp
+
+  removeTask name (MTM mp) = MTM $ delete name mp
+
+  modifyPriority name newPri (MTM mp) = MTM $ update (\(comp, _) -> Just (comp, newPri)) name mp
+
+  renameTask oldName newName (MTM mp) = let
+      mval = Data.Map.lookup oldName mp
+      mp1 = delete oldName mp
+    in
+      case mval of
+        Nothing -> MTM mp
+        Just val -> MTM $ insert newName val mp1
 --    ____       __  __
 --   / ___|___  / _|/ _| ___  ___
 --  | |   / _ \| |_| |_ / _ \/ _ \
@@ -224,7 +261,8 @@ instance HasPrice CoffeeExtra where
   price BrownSugar = 35
 
 -- TODO: You want to make 'Coffee' an instance of 'HasPrice'.
-instance HasPrice Coffee
+instance HasPrice Coffee where
+  price x = (cost x) + getSum (foldMap (Sum . price) (extras x))
 
 -- | A debit card.
 -- Note: the balance can be negative.
