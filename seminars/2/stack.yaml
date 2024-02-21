@@ -1,0 +1,7 @@
+resolver: lts-22.6
+
+packages:
+- .
+
+ghc-options:
+  "$locals": -ddump-to-file -ddump-hi -fwarn-unused-binds -fwarn-unused-imports -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Werror=missing-home-modules -Wmissing-home-modules -Widentities -Wredundant-constraints -Wmissing-export-lists

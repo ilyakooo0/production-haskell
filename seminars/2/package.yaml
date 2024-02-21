@@ -1,0 +1,19 @@
+name:                task
+version:             0.1.0.0
+license:             Unlicense
+
+dependencies:
+  - base >= 4.7 && < 5
+  - mtl
+
+library:
+  source-dirs:      src
+
+tests:
+  task-tests:
+    source-dirs:      test
+    main: Main.hs
+    dependencies:
+    - tasty
+    - task
+    - tasty-hunit
