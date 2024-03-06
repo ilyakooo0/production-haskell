@@ -34,6 +34,8 @@ import Data.Map (Map, empty, toList, insert, update, delete)
 import Data.Monoid (Sum(..))
 import qualified Data.Map
 import Data.List (sortBy)
+import Data.Maybe (catMaybes, listToMaybe, mapMaybe)
+import Control.Applicative hiding (empty)
 
 --   _     _     _     __  __                   _     _
 --  | |   (_)___| |_  |  \/  | ___  _ __   ___ (_) __| |___
@@ -279,7 +281,9 @@ data DebitCard
 -- If the balance of the debit card after deducing the price of the coffee
 -- would become negative, return 'Nothing' from the function.
 chargeCoffee :: Coffee -> DebitCard -> Maybe DebitCard
-chargeCoffee = error "TODO: chargeCoffee"
+chargeCoffee coffee card
+  | price coffee <= balance card = Just card {balance=balance card - price coffee} 
+  | otherwise = Nothing
 
 -- | How was the coffee charged.
 data PaymentMethod
@@ -327,7 +331,15 @@ data Customer
 -- NOTE: The customer can only buy a coffee with strictly one payment method.
 --   (Only one card or cash)
 payForCoffee :: Customer -> Coffee -> Maybe PaymentMethod
-payForCoffee = error "TODO: payForCoffee"
+payForCoffee customer coffee =
+  let checkCard = chargeCoffee coffee
+      goodCards :: Maybe PaymentMethod
+      goodCards = fmap Card $ listToMaybe $ mapMaybe checkCard (cards customer)
+      cashOption = if cash customer >= price coffee then
+                    Just $ Cash (cash customer - price coffee)
+                  else 
+                    Nothing
+   in goodCards <|> cashOption 
 
 -- | This function should apply the chosen payment method to the customer.
 -- In other words, it needs to apply the charge to the customer himself
@@ -338,12 +350,21 @@ payForCoffee = error "TODO: payForCoffee"
 --
 -- NOTE: You can not change the order of the cards.
 applyPayment :: Customer -> PaymentMethod -> Customer
-applyPayment = error "TODO: applyPayment"
+applyPayment customer paymentMethod =
+  case paymentMethod of 
+    Cash change -> customer {cash = change }
+    Card chargedCard ->
+      let newCards = fmap (\card -> if cardId card == cardId chargedCard then chargedCard else card ) $ cards customer
+      in customer {cards = newCards}
+   
 
 -- | Performs the full payment (as in 'payForCoffee') and
 -- returns the modified customer (as in 'applyPayment').
 buyCoffee :: Customer -> Coffee -> Maybe Customer
-buyCoffee = error "TODO: buyCoffee"
+buyCoffee customer coffe =
+  let maybePaymentMethod =  payForCoffee customer coffe  in
+    fmap (applyPayment customer) maybePaymentMethod
+
 
 -- | You know that due to a medical condition the customer needs to watch his
 -- sugar intake. The new privacy-invading piece of ... technology can now
@@ -357,7 +378,14 @@ buyCoffee = error "TODO: buyCoffee"
 --
 -- NOTE: You can not change the order of the coffee.
 saveTheDiabetic :: [Coffee] -> (RUBAmount, [Coffee])
-saveTheDiabetic = error "TODO: saveTheDiabetic"
+saveTheDiabetic coffeeList = 
+  let isSugar = (`elem` [WhiteSugar, BrownSugar])
+      sugarPrice extra = if isSugar extra then price extra else 0
+      savedMonney = foldl (\savedMonney coffee -> savedMonney + (sum $ fmap sugarPrice $ extras coffee))
+                          0 coffeeList
+      coffeesWithoutSugar = fmap (\coffee -> coffee {extras = filter (not . isSugar) $ extras coffee} ) coffeeList
+  in (savedMonney, coffeesWithoutSugar)
+  
 
 -- | And just to torment those who love sugar lets make a function which
 -- calculates health hazard (sugar content) of the given orders.
@@ -367,4 +395,11 @@ saveTheDiabetic = error "TODO: saveTheDiabetic"
 --   WhiteSugar: 2 extra danger points
 --   BrownSugar: 1 extra danger point
 calculateSugarDanger :: [Coffee] -> Int
-calculateSugarDanger = error "TODO: calculateSugarDanger"
+calculateSugarDanger coffeeList = sum $ fmap (
+  \extra -> case extra of
+    WhiteSugar -> 2
+    BrownSugar -> 1
+    _ -> 0) (coffeeList >>= extras)
+
+-- (>>=) :: m a -> (a -> m b) -> m b
+-- (>>=) :: [a] -> (a -> [b]) -> [b]

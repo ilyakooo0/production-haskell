@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 20a39a4ec02d6e75694b336bd8631bf5d630fcaacb76de84c7263c8abe1c45b3
+-- hash: c2b1bcd2599c61a3fda41614499046ca5654131a2e5ac9976e0c07ec2b8887d8
 
 name:           task
 version:        0.1.0.0
@@ -21,7 +21,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , mtl
   default-language: Haskell2010
 
@@ -36,7 +37,8 @@ test-suite task-tests
   hs-source-dirs:
       test
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , mtl
     , task
     , tasty
