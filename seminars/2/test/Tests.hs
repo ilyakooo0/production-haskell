@@ -3,9 +3,12 @@ module Tests
   )
 where
 
-import Task
+import Task 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck
+
+
 
 tests :: TestTree
 tests = testGroup "Tests"
@@ -24,4 +27,9 @@ tests = testGroup "Tests"
       calculate "(((1 + 2) *3) +( if ( 1 = 2 )  then (2 + 4)  else 2  +  1)" @=? Nothing
       calculate "(((1 + 2) *3) +( f ( 1 = 2 )  then (2 + 4)  else 2  +  1)   )" @=? Nothing
       calculate "(((1 + 2) *3) +( f ( 1 = 2 )  then (2 + 4)  +  1)   )" @=? Nothing
+  , testProperty "parse & convert" 
+    (\expr -> let expr_str = show expr 
+                  expr_from_str = runParser parseFull expr_str in
+              Just expr == expr_from_str
+         )
   ]

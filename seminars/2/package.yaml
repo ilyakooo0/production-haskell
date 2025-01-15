@@ -18,3 +18,4 @@ tests:
     - tasty
     - task
     - tasty-hunit
+    - tasty-quickcheck

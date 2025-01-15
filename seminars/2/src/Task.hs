@@ -5,6 +5,8 @@
 module Task
   ( calculate,
     Expr(..),
+    parseFull,
+    runParser,
   )
 where
 
@@ -67,6 +69,11 @@ anyToken = Parser $ \s -> case s of
   "" -> Left "Empty String"
   (hd: tl) -> Right (hd, tl)
 
+peekToken :: Parser Char
+peekToken = Parser $ \s -> case s of
+  "" -> Left "Empty String"
+  (hd: tl) -> Right (hd, hd : tl)
+
 eos :: Parser ()
 eos = Parser $ \s -> case s of
   "" -> Right ((), "")
@@ -119,33 +126,58 @@ number = do
     Just res -> return res
     Nothing -> fail $ "unexpected invalid number: '" ++ chars ++ "'"
 
+anyNumber :: Parser Int 
+anyNumber = do 
+  nextChar <- peekToken
+  case nextChar of 
+    '-' -> do
+        anyToken
+        number_abs <- number
+        pure $ negate number_abs 
+    _ -> number
+
 data Expr 
   = Num Int 
   | AddExpr Expr Expr 
   | MulExpr Expr Expr 
   | SubExpr Expr Expr 
   | DivExpr Expr Expr
-  deriving Show
+  deriving (Eq)
+
+instance Show Expr where
+  show arg = case arg of
+    (Num i) -> show i
+    (AddExpr e1 e2) -> template "+" e1 e2
+    (MulExpr e1 e2) -> template "*" e1 e2
+    (SubExpr e1 e2) -> template "-" e1 e2
+    (DivExpr e1 e2) -> template "/" e1 e2
+    where template op e1 e2 = "(" <> show e1 <> " " <> op <> " " <> show e2 <> ")"
 
 half :: Gen a -> Gen a
 half = scale (`div` 2)
 
-instance Arbitrary Expr where
-  arbitrary = do
-    size <- getSize 
-    case size of 
-      0 -> Num <$> arbitrary 
-      otherwise ->
-        oneof [
-          Num <$> arbitrary,
-          AddExpgr <$> half arbitrary <*> half arbitrary,
+genPrimitive :: Gen Expr
+genPrimitive = Num <$> scale ((* 5) . (+ 1)) arbitrary 
+
+genRecursive :: Gen Expr
+genRecursive = oneof [
+          AddExpr <$> half arbitrary <*> half arbitrary,
           SubExpr <$> half arbitrary <*> half arbitrary,
           MulExpr <$> half arbitrary <*> half arbitrary,
           DivExpr <$> half arbitrary <*> half arbitrary
-          ]
+  ]
+
+recursiveProb :: Int -> (Int, Int)
+recursiveProb sz = (maximum [1, sz `div` 5], sz)
+
+instance Arbitrary Expr where
+  arbitrary = do
+    sz <- getSize
+    let (wPrim, wRec) = recursiveProb sz
+    frequency [(wPrim, genPrimitive), (wRec, genRecursive)]
 
 parse :: Parser Expr
-parse = Num <$> number <|> (do
+parse = Num <$> anyNumber <|> (do
     token '('
     tokensWhile isSpace
     expr1 <- parse
@@ -181,8 +213,10 @@ evaluate (DivExpr left right) = div <$> (evaluate left) <*> (evaluate right)
 runParser :: Parser x -> String -> Maybe x
 runParser (Parser parser_fun) context = 
   case parser_fun context of 
-   Left msg -> trace msg Nothing
+   Left msg -> Nothing
    Right (x, _) -> Just x
+
+
 
 calculate :: String -> Maybe Int
 calculate s = do
