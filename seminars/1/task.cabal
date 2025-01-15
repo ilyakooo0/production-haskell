@@ -1,0 +1,48 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 3a8f9a0f85eb8219783c3f247249d6000cc81ac3994ea1301271c8fd551f3224
+
+name:           task
+version:        0.1.0.0
+license:        Unlicense
+license-file:   LICENSE
+build-type:     Simple
+
+library
+  exposed-modules:
+      Task
+  other-modules:
+      Paths_task
+  autogen-modules:
+      Paths_task
+  hs-source-dirs:
+      src
+  default-extensions:
+      EmptyDataDeriving
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+test-suite task-tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Tests
+      Paths_task
+  autogen-modules:
+      Paths_task
+  hs-source-dirs:
+      test
+  default-extensions:
+      EmptyDataDeriving
+  build-depends:
+      base >=4.7 && <5
+    , hspec
+    , task
+    , tasty
+    , tasty-hspec
+  default-language: Haskell2010
