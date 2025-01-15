@@ -12,18 +12,50 @@ module Task
     insert,
     insertAll,
     treeSize,
+    getInt, getString, twoAndHello
+    , StringList
   )
 where
 
 import Numeric.Natural
 
+data IntAndString = IntAndStringCons Int String
+
+getInt :: IntAndString -> Int
+getInt (IntAndStringCons int _) = int
+
+getString :: IntAndString -> String
+getString (IntAndStringCons _ string) = string
+
+twoAndHello :: IntAndString
+twoAndHello = IntAndStringCons 2 "Hello"
+
 -- Implement a function which regroups a nested tuple as the types would suggest.
 --
 -- >>> regroup (8, ("Hello", True))
 -- ("Hello", 8, True)
-regroup :: (a, (b, c)) -> (b, a, c)
-regroup = error "TODO: regroup"
+regroup :: (,) a ((,) b c) -> (,,) b a c
+-- regroup :: (a, (b, c)) -> (b, a, c)
+regroup (a, (b, c)) = (b, a, c)
 
+data StringList = Cons String StringList | Nil
+data List a = ListCons a (List a) | Nil'
+--data [] a = (:) a ([] a) | []
+
+oneTwoThree :: List Int
+oneTwoThree = ListCons 1 (ListCons 2 (ListCons 3 Nil'))
+-- oneTwoThree = (:) 1 ((:) 2 ((:) 3 []))
+-- oneTwoThree = [1, 2, 3]
+
+helloWorldList :: StringList
+helloWorldList = Cons "Hello" (Cons "World" Nil)
+
+-- data Maybe a = Just a | Nothing
+
+stringListHead :: StringList -> Maybe String
+stringListHead x = case x of
+  Cons string string_list' -> Just string
+  Nil -> Nothing
 --   _     _     _         _          __  __
 --  | |   (_)___| |_   ___| |_ _   _ / _|/ _|
 --  | |   | / __| __| / __| __| | | | |_| |_

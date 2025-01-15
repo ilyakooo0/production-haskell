@@ -4,12 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3a8f9a0f85eb8219783c3f247249d6000cc81ac3994ea1301271c8fd551f3224
+-- hash: 277fdb1045c1c9d2cb6a9b18205641b9cea720bc0d3421fbe8e90bb848e9a8c6
 
 name:           task
 version:        0.1.0.0
 license:        Unlicense
-license-file:   LICENSE
 build-type:     Simple
 
 library
