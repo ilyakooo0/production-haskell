@@ -75,7 +75,8 @@ stringListHead x = case x of
 -- >>> safeHead []
 -- Nothing
 safeHead :: [a] -> Maybe a
-safeHead = error "TODO: safeHead"
+safeHead [] = Nothing
+safeHead (x:_) = Just x
 
 -- Same as `safeHead`, but returns the last element.
 --
@@ -85,7 +86,9 @@ safeHead = error "TODO: safeHead"
 -- >>> safeLast []
 -- Nothing
 safeLast :: [a] -> Maybe a
-safeLast = error "TODO: safeLast"
+safeLast [] = Nothing
+safeLast [x] = Just x
+safeLast (_:xs) = safeLast xs
 
 -- Returns the same list without the last element.
 --
@@ -95,7 +98,9 @@ safeLast = error "TODO: safeLast"
 -- >>> withoutLast []
 -- []
 withoutLast :: [a] -> [a]
-withoutLast = error "TODO: withoutLast"
+withoutLast [] = []
+withoutLast [x] = []
+withoutLast (x:xs) = x:(withoutLast xs)
 
 -- Returns the element at a given index if there is one.
 -- Otherwise, return Nothing.
@@ -106,15 +111,19 @@ withoutLast = error "TODO: withoutLast"
 -- >>> indexed 8 [6, 5, 4]
 -- Nothing
 indexed :: Natural -> [a] -> Maybe a
-indexed = error "TODO: indexed"
+indexed 0 (x:_) = Just x
+indexed number [] = Nothing
+indexed number (_:xs) = indexed (number-1) xs
 
 -- Is an infinite list, alternating the sign of every other element.
 --
 -- >>> alternating
 -- [1, -2, 3, -4, 5, -6, ...
 alternating :: [Integer]
-alternating = error "TODO: alternating"
-
+alternating = cut rising
+  where
+    cut (x1:x2:xs) = x1:(-x2):cut xs
+    rising = 1 : map (+ 1) rising
 --   ____  _                          _
 --  | __ )(_)_ __   __ _ _ __ _   _  | |_ _ __ ___  ___
 --  |  _ \| | '_ \ / _` | '__| | | | | __| '__/ _ \/ _ \
@@ -138,8 +147,9 @@ alternating = error "TODO: alternating"
 --        (in this context a 'branch' and a 'tree' is the same thing)
 --
 --   In case you didn't get it, a tree should have two constructors.
-data Tree a -- complete the implementation
+data Tree a = Branch a (Tree a) (Tree a) | EmptyBranch
   deriving (Show, Eq)
+
 -- ^ Don't worry about this 'deriving' business. It is needed for tests
 -- to compile. It will be explained later.
 
@@ -176,7 +186,15 @@ data Tree a -- complete the implementation
 --    l   l r   r
 --   .............
 constructTree :: [a] -> Tree a
-constructTree = error "TODO: constructTree"
+constructTree [] = EmptyBranch
+constructTree (x:xs) = Branch x (constructTree leftBranch) (constructTree rightBranch)
+  where
+    split (a:b:xs) = (a:aTail, b:bTail)
+      where
+        (aTail, bTail) = split xs
+    split [] = ([], [])
+    split [x] = ([x], [])
+    (leftBranch, rightBranch) = split xs
 
 -- Returns the leftmost element of the given tree.
 --
@@ -192,7 +210,9 @@ constructTree = error "TODO: constructTree"
 --     / \   /
 --    4   6 5
 leftmost :: Tree a -> Maybe a
-leftmost = error "TODO: leftmost"
+leftmost EmptyBranch = Nothing
+leftmost (Branch a EmptyBranch _) = Just a
+leftmost (Branch _ br _) = leftmost br
 
 -- Returns the rightmost element of the given tree.
 --
