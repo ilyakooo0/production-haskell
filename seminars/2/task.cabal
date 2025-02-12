@@ -1,15 +1,14 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e7ce4d16c67bf724ae661c06d421b31bdf4a8955874528858483b7ed2f59e002
+-- hash: ddba7c41567dee52b3a87665d600c9bc4e63a7aaa95daa7e0f529d57377d88f2
 
 name:           task
 version:        0.1.0.0
 license:        Unlicense
-license-file:   LICENSE
 build-type:     Simple
 
 library

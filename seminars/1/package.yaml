@@ -4,6 +4,7 @@ license:             Unlicense
 
 dependencies:
   - base >= 4.7 && < 5
+  - QuickCheck
 
 default-extensions:
   - EmptyDataDeriving

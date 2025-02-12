@@ -29,6 +29,9 @@ module Task
   )
 where
 
+-- fold [] = mempty
+-- fold (x: xs) = x <> fold xs
+
 --   _     _     _     __  __                   _     _
 --  | |   (_)___| |_  |  \/  | ___  _ __   ___ (_) __| |___
 --  | |   | / __| __| | |\/| |/ _ \| '_ \ / _ \| |/ _` / __|
@@ -50,19 +53,29 @@ where
 --
 -- >>> (destructFirstMonoid . fold . fmap constructFirstMonoid) []
 -- Nothing
-data FirstMonoid a
+data FirstMonoid a = FirstMonoid (Maybe a)
 
-instance Semigroup (FirstMonoid a)
+-- class Semigroup a where
+--   (<>) :: a -> a -> a
 
-instance Monoid (FirstMonoid a)
+-- instance Semigroup [a] where
+--   [] <> xs = xs
+--   (x : xs) <> ys = x (xs <> ys)
+
+instance Semigroup (FirstMonoid a) where
+  FirstMonoid Nothing <> a = a
+  FirstMonoid (Just a) <> _ = FirstMonoid (Just a)
+
+instance Monoid (FirstMonoid a) where
+  mempty = FirstMonoid Nothing
 
 -- Warps an `a` in a `FirstMonoid`.
 constructFirstMonoid :: a -> FirstMonoid a
-constructFirstMonoid = error "TODO: constructFirstMonoid"
+constructFirstMonoid a = FirstMonoid (Just a)
 
 -- Unwraps the `a` from a `FirstMonoid`, if there is one.
 destructFirstMonoid :: FirstMonoid a -> Maybe a
-destructFirstMonoid = error "TODO: destructFirstMonoid"
+destructFirstMonoid (FirstMonoid a) = a
 
 -- Write a datatype and a Monoid instance for it such that:
 --

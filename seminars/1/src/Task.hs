@@ -18,6 +18,7 @@ module Task
 where
 
 import Numeric.Natural
+import Test.QuickCheck
 
 data IntAndString = IntAndStringCons Int String
 
@@ -150,6 +151,21 @@ alternating = cut rising
 data Tree a = Branch a (Tree a) (Tree a) | EmptyBranch
   deriving (Show, Eq)
 
+instance Functor Tree where
+  fmap _ EmptyBranch = EmptyBranch
+  fmap f (Branch b leftb rightb) = Branch (f b) (fmap f leftb) (fmap f rightb)
+
+instance Arbitrary a => Arbitrary (Tree a) where
+  arbitrary = oneof [
+    pure EmptyBranch,
+    do
+      a <- arbitrary
+      lbr <- arbitrary
+      rbr <- arbitrary
+      return (Branch a lbr rbr)
+    ]
+
+
 -- ^ Don't worry about this 'deriving' business. It is needed for tests
 -- to compile. It will be explained later.
 
@@ -228,7 +244,9 @@ leftmost (Branch _ br _) = leftmost br
 --     / \   /
 --    4   6 5
 rightmost :: Tree a -> Maybe a
-rightmost = error "TODO: rightmost"
+rightmost EmptyBranch = Nothing
+rightmost (Branch a _ EmptyBranch) = Just a
+rightmost (Branch _ _ br) = rightmost br
 
 -- Returns the sum of all elements in the tree
 --
@@ -244,7 +262,9 @@ rightmost = error "TODO: rightmost"
 --     / \   /
 --    4   6 5
 treeSum :: Tree Integer -> Integer
-treeSum = error "TODO: treeSum"
+treeSum EmptyBranch = 0
+treeSum (Branch a brl brr) = a + treeSum brl + treeSum brr
+
 
 -- Returns the number of elements in the tree.
 --
@@ -260,7 +280,8 @@ treeSum = error "TODO: treeSum"
 --     / \   /
 --    4   6 5
 treeSize :: Tree a -> Integer
-treeSize = error "TODO: treeSize"
+treeSize EmptyBranch = 0
+treeSize (Branch _ brl brr) = 1 + treeSize brl + treeSize brr
 
 -- Insert the given integer into the tree, maintaining this property:
 --   For every node in the tree all elements in the left subtree should be
@@ -333,7 +354,8 @@ treeSize = error "TODO: treeSize"
 -- Also, see comments for function insertAll for more examples of how this
 -- function should behave.
 insert :: Integer -> Tree Integer -> Tree Integer
-insert = error "TODO: insert"
+insert a EmptyBranch = Branch a EmptyBranch EmptyBranch
+insert a (Branch n brl brr) = if a < n then (Branch n (insert a brl) brr) else if a > n then (Branch n brl (insert a brr)) else Branch n brl brr
 
 -- Insert all integers from the list into the given tree using the insert
 -- function defined above.
@@ -362,4 +384,5 @@ insert = error "TODO: insert"
 --  \
 --   10
 insertAll :: [Integer] -> Tree Integer -> Tree Integer
-insertAll = error "TODO: insertAll"
+insertAll (x:xs) tr = insertAll xs (insert x tr)
+insertAll [] tr = tr
