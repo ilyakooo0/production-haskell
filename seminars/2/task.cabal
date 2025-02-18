@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ddba7c41567dee52b3a87665d600c9bc4e63a7aaa95daa7e0f529d57377d88f2
+-- hash: 15a870ebff263dd9493d8624136d4468bfa3ade7fad4a0cb1b9a047b79b109d8
 
 name:           task
 version:        0.1.0.0
@@ -22,6 +22,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , random
   default-language: Haskell2010
 
 test-suite task-tests
@@ -36,6 +37,7 @@ test-suite task-tests
       test
   build-depends:
       base >=4.7 && <5
+    , random
     , task
     , tasty
     , tasty-hunit

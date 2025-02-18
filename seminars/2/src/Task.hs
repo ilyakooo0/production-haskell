@@ -26,8 +26,51 @@ module Task
     buyCoffee,
     saveTheDiabetic,
     calculateSugarDanger,
+    runStRandom, genStIntDouble
   )
 where
+
+import System.Random
+import Control.Monad
+
+newtype State s a = State { runState :: s -> IO (s, a) }
+
+instance Functor (State s) where
+  -- fmap :: (a -> b) -> functor a -> functor b 
+  fmap f (State g) = State (\s -> let (s', a) = g s in (s', f a))
+  -- fmap f (State g) = State (fmap (fmap f) g)
+
+instance Applicative (State s) where
+  pure a = State (\s -> (s, a))
+  (<*>) = ap
+
+instance Monad (State s) where
+  -- (>>=) :: State s a -> (a -> State s b) -> State s b
+  State g >>= f = State $ \s -> let (s', a) = g s in
+    let State h = f a in
+      h s'
+
+get :: State s s
+get = State (\s -> (s, s))
+
+put :: s -> State s ()
+put s = State (\_ -> (s, ()))
+
+stRandom :: Random a => State StdGen a
+stRandom = do
+  s <- get
+  let (r, s') = random s
+  put s'
+  return r
+
+runStRandom :: State StdGen a -> a
+runStRandom (State g) = snd (g (mkStdGen 8))
+
+genStIntDouble :: State StdGen (Int, Double)
+genStIntDouble = do
+  int <- stRandom
+  double <- stRandom
+  return (int, double)
 
 -- fold [] = mempty
 -- fold (x: xs) = x <> fold xs
