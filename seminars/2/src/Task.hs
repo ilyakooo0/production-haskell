@@ -27,13 +27,16 @@ module Task
     saveTheDiabetic,
     calculateSugarDanger,
     runStRandom, genStIntDouble
+    , foo
   )
 where
 
 import System.Random
 import Control.Monad
 
-newtype State s a = State { runState :: s -> IO (s, a) }
+newtype State m s a = State { runState :: s -> (s, m a) }
+newtype Reader m s a = Reader { runReader :: s -> m a }
+type Foo s s' a = State (Reader Identity s') s a 
 
 instance Functor (State s) where
   -- fmap :: (a -> b) -> functor a -> functor b 
@@ -71,6 +74,9 @@ genStIntDouble = do
   int <- stRandom
   double <- stRandom
   return (int, double)
+
+foo :: State StdGen [(Int, Double)]
+foo = sequenceA [genStIntDouble, genStIntDouble]
 
 -- fold [] = mempty
 -- fold (x: xs) = x <> fold xs
@@ -135,19 +141,23 @@ destructFirstMonoid (FirstMonoid a) = a
 --
 -- >>> (destructLastMonoid . fold . fmap constructLastMonoid) []
 -- Nothing
-data LastMonoid a
+data LastMonoid a = LastMonoid (Maybe a)
 
-instance Semigroup (LastMonoid a)
+instance Semigroup (LastMonoid a) where
+  a <> LastMonoid Nothing = a
+  _ <> LastMonoid (Just a) = LastMonoid (Just a)
 
-instance Monoid (LastMonoid a)
+
+instance Monoid (LastMonoid a) where
+  mempty = LastMonoid Nothing
 
 -- Warps an `a` in a `LastMonoid`.
 constructLastMonoid :: a -> LastMonoid a
-constructLastMonoid = error "TODO: constructLastMonoid"
+constructLastMonoid a = LastMonoid (Just a)
 
 -- Unwraps the `a` from a `LastMonoid`, if there is one.
 destructLastMonoid :: LastMonoid a -> Maybe a
-destructLastMonoid = error "TODO: destructLastMonoid"
+destructLastMonoid (LastMonoid a) = a
 
 --   _____         _         _     _     _
 --  |_   _|__   __| | ___   | |   (_)___| |_
