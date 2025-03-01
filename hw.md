@@ -20,6 +20,6 @@ The program should run in constant memory.
 
 You should use the [`nightly-2024-10-11`](https://www.stackage.org/nightly-2024-10-11) stack snapshot in your project.
 
-You should use the [streamly](https://hackage.haskell.org/package/streamly) family of packages for streaming functionality. Using a streaming package will help insure constant memory.
+You should use the [streamly](https://hackage.haskell.org/package/streamly) family of packages for streaming functionality. Using a streaming package will help ensure constant memory.
 
 You should use the [optparse-applicative](https://hackage.haskell.org/package/optparse-applicative) package to parse CLI arguments.
